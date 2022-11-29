@@ -36,11 +36,12 @@ func New(mongo *mongo.Client) Models {
 func (l *LogEntry) Insert(entry LogEntry) error {
 	collection := client.Database("logs").Collection("logs")
 
+	insertedAt := time.Now()
 	_, err := collection.InsertOne(context.TODO(), LogEntry{
 		Name:      entry.Name,
 		Data:      entry.Data,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedAt: insertedAt,
+		UpdatedAt: insertedAt,
 	})
 	if err != nil {
 		log.Println("Error inserting into logs:", err)
@@ -77,7 +78,6 @@ func (l *LogEntry) All() ([]*LogEntry, error) {
 			log.Panicln("Error decoding log into slice:", err)
 			return nil, err
 		}
-
 		logs = append(logs, &item)
 	}
 
@@ -96,7 +96,7 @@ func (l *LogEntry) GetOne(id string) (*LogEntry, error) {
 	}
 
 	var entry LogEntry
-	err = collection.FindOne(ctx, bson.M{"_id": docID})
+	err = collection.FindOne(ctx, bson.M{"_id": docID}).Decode(&entry)
 	if err != nil {
 		return nil, err
 	}
