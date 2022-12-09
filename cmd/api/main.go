@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/djfurman/go-micro-logger-service/data"
@@ -78,8 +79,8 @@ func connectToMongo() (*mongo.Client, error) {
 	// Create connection options
 	clientOptions := options.Client().ApplyURI(mongoURL)
 	clientOptions.SetAuth(options.Credential{
-		Username: "local-blue",
-		Password: "secret",
+		Username: os.Getenv("DB_USER"),
+		Password: os.Getenv("DB_PASS"),
 	})
 
 	// Connect

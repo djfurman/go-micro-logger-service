@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"log"
+	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -12,6 +13,7 @@ import (
 )
 
 var client *mongo.Client
+var collectionName string
 
 type Models struct {
 	LogEntry LogEntry
@@ -27,6 +29,7 @@ type LogEntry struct {
 
 func New(mongo *mongo.Client) Models {
 	client = mongo
+	collectionName = os.Getenv("DB_NAME")
 
 	return Models{
 		LogEntry: LogEntry{},
@@ -34,7 +37,7 @@ func New(mongo *mongo.Client) Models {
 }
 
 func (l *LogEntry) Insert(entry LogEntry) error {
-	collection := client.Database("logs").Collection("logs")
+	collection := client.Database(collectionName).Collection(collectionName)
 
 	insertedAt := time.Now()
 	_, err := collection.InsertOne(context.TODO(), LogEntry{
@@ -55,7 +58,7 @@ func (l *LogEntry) All() ([]*LogEntry, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	collection := client.Database("logs").Collection("logs")
+	collection := client.Database(collectionName).Collection(collectionName)
 
 	opts := options.Find()
 	opts.SetSort(bson.D{{"created_at", -1}})
@@ -88,7 +91,7 @@ func (l *LogEntry) GetOne(id string) (*LogEntry, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	collection := client.Database("logs").Collection("logs")
+	collection := client.Database(collectionName).Collection(collectionName)
 
 	docID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -108,7 +111,7 @@ func (l *LogEntry) TruncateCollection() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	collection := client.Database("logs").Collection("logs")
+	collection := client.Database(collectionName).Collection(collectionName)
 
 	if err := collection.Drop(ctx); err != nil {
 		return err
@@ -121,7 +124,7 @@ func (l *LogEntry) Update() (*mongo.UpdateResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	collection := client.Database("logs").Collection("logs")
+	collection := client.Database(collectionName).Collection(collectionName)
 
 	docID, err := primitive.ObjectIDFromHex(l.ID)
 	if err != nil {
